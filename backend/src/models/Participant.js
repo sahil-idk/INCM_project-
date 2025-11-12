@@ -10,18 +10,15 @@ const participantSchema = new mongoose.Schema({
   demographics: {
     age: {
       type: Number,
-      required: true,
       min: 18,
       max: 100
     },
     gender: {
       type: String,
-      required: true,
       enum: ['male', 'female', 'non-binary', 'prefer-not-to-say']
     },
     handedness: {
       type: String,
-      required: true,
       enum: ['right', 'left', 'ambidextrous']
     }
   },
