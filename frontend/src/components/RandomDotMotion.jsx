@@ -313,7 +313,7 @@ const RandomDotMotion = ({
     <div className="canvas-container no-select">
       <div className="trial-info">
         <div className="trial-counter">
-          Trial {trialNumber} of {condition === 'practice' ? 10 : condition === 'baseline' ? 60 : 120}
+          Trial {trialNumber} of {condition === 'practice' ? 10 : condition === 'baseline' ? 40 : 80}
         </div>
         <div className="condition-label">
           {condition === 'practice' ? 'Practice' : condition === 'baseline' ? 'Part 1: Baseline' : 'Part 2: Time Pressure'}

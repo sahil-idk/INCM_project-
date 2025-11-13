@@ -11,13 +11,16 @@ function shuffle(array) {
 }
 
 // Generate trial sequence for a condition
-function generateConditionTrials(condition, coherenceLevels, trialsPerCoherence) {
+function generateConditionTrials(condition, coherenceLevels, trialsPerCoherenceMap) {
   const trials = [];
 
   coherenceLevels.forEach(coherence => {
-    // Create equal number of left and right trials
-    const leftTrials = trialsPerCoherence / 2;
-    const rightTrials = trialsPerCoherence / 2;
+    // Get number of trials for this coherence level
+    const trialsForCoherence = trialsPerCoherenceMap[coherence];
+
+    // Create roughly equal number of left and right trials
+    const leftTrials = Math.floor(trialsForCoherence / 2);
+    const rightTrials = trialsForCoherence - leftTrials; // Handles odd numbers
 
     for (let i = 0; i < leftTrials; i++) {
       trials.push({
@@ -95,9 +98,15 @@ export function generatePracticeTrials(numTrials = 10) {
 // Generate baseline trials (no time pressure)
 export function generateBaselineTrials() {
   const coherenceLevels = [0.10, 0.25, 0.40];
-  const trialsPerCoherence = 20; // 20 trials per coherence level = 60 total
 
-  let trials = generateConditionTrials('baseline', coherenceLevels, trialsPerCoherence);
+  // Trial distribution: 13 + 14 + 13 = 40 total trials
+  const trialsPerCoherenceMap = {
+    0.10: 13,  // 13 trials at 10% coherence (6-7 left, 6-7 right)
+    0.25: 14,  // 14 trials at 25% coherence (7 left, 7 right)
+    0.40: 13   // 13 trials at 40% coherence (6-7 left, 6-7 right)
+  };
+
+  let trials = generateConditionTrials('baseline', coherenceLevels, trialsPerCoherenceMap);
 
   // Enforce constraint: no more than 3 consecutive trials in same direction
   trials = enforceDirectionConstraint(trials, 3);
@@ -113,17 +122,23 @@ export function generateBaselineTrials() {
 // Generate time pressure trials
 export function generateTimePressureTrials() {
   const coherenceLevels = [0.10, 0.25, 0.40];
-  const trialsPerCoherence = 20; // 20 trials per coherence level = 60 total
 
-  let trials = generateConditionTrials('timePressure', coherenceLevels, trialsPerCoherence);
+  // Trial distribution: 13 + 14 + 13 = 40 total trials
+  const trialsPerCoherenceMap = {
+    0.10: 13,  // 13 trials at 10% coherence (6-7 left, 6-7 right)
+    0.25: 14,  // 14 trials at 25% coherence (7 left, 7 right)
+    0.40: 13   // 13 trials at 40% coherence (6-7 left, 6-7 right)
+  };
+
+  let trials = generateConditionTrials('timePressure', coherenceLevels, trialsPerCoherenceMap);
 
   // Enforce constraint: no more than 3 consecutive trials in same direction
   trials = enforceDirectionConstraint(trials, 3);
 
-  // Add trial numbers (starting from 61 for continuity)
+  // Add trial numbers (starting from 41 for continuity)
   return trials.map((trial, index) => ({
     ...trial,
-    trialNumber: index + 61,
+    trialNumber: index + 41,
     showFeedback: false,
     timeLimit: 1000 // 1 second time limit
   }));
