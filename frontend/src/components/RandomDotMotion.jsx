@@ -90,6 +90,8 @@ const RandomDotMotion = ({
 
   // Initialize dots
   useEffect(() => {
+    console.log(`[RDM] Trial ${trialNumber} starting - Condition: ${condition}, Coherence: ${coherence}, Direction: ${direction}`);
+
     const dots = [];
     const numCoherentDots = Math.round(NUM_DOTS * coherence);
 
@@ -112,10 +114,12 @@ const RandomDotMotion = ({
     }
 
     dotsRef.current = dots;
+    console.log(`[RDM] Trial ${trialNumber} - ${numCoherentDots} coherent dots created`);
 
     // Show fixation cross first
     setShowFixation(true);
     const fixationTimeout = setTimeout(() => {
+      console.log(`[RDM] Trial ${trialNumber} - Fixation complete, starting stimulus`);
       setShowFixation(false);
       startTimeRef.current = performance.now();
       hasRespondedRef.current = false;
@@ -130,6 +134,7 @@ const RandomDotMotion = ({
     }, 500); // 500ms fixation
 
     return () => {
+      console.log(`[RDM] Trial ${trialNumber} - Cleanup starting`);
       clearTimeout(fixationTimeout);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
@@ -137,6 +142,7 @@ const RandomDotMotion = ({
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
       }
+      console.log(`[RDM] Trial ${trialNumber} - Cleanup complete`);
     };
   }, [coherence, direction, timeLimit]);
 
@@ -165,6 +171,8 @@ const RandomDotMotion = ({
 
   // Handle timeout
   const handleTimeout = () => {
+    console.log(`[RDM] Trial ${trialNumber} - TIMEOUT! No response within ${timeLimit}ms`);
+
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
@@ -172,12 +180,15 @@ const RandomDotMotion = ({
       clearInterval(timerIntervalRef.current);
     }
 
-    onResponse({
+    const timeoutData = {
       response: 'timeout',
       rt: null,
       correct: false,
       timeout: true
-    });
+    };
+
+    console.log(`[RDM] Trial ${trialNumber} - Calling onResponse with timeout:`, timeoutData);
+    onResponse(timeoutData);
   };
 
   // Animation loop
@@ -210,6 +221,37 @@ const RandomDotMotion = ({
     }
   };
 
+  // Handle response (keyboard or button click)
+  const handleResponse = (response) => {
+    if (hasRespondedRef.current || showFixation) return;
+
+    hasRespondedRef.current = true;
+    const rt = performance.now() - startTimeRef.current;
+
+    console.log(`[RDM] Trial ${trialNumber} - Response: ${response}, RT: ${Math.round(rt)}ms, Correct: ${response === direction}`);
+
+    // Stop animation
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+    }
+
+    // Check if correct
+    const correct = response === direction;
+
+    const responseData = {
+      response,
+      rt: Math.round(rt),
+      correct,
+      timeout: false
+    };
+
+    console.log(`[RDM] Trial ${trialNumber} - Calling onResponse with:`, responseData);
+    onResponse(responseData);
+  };
+
   // Handle keyboard response
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -224,26 +266,7 @@ const RandomDotMotion = ({
       }
 
       if (response) {
-        hasRespondedRef.current = true;
-        const rt = performance.now() - startTimeRef.current;
-
-        // Stop animation
-        if (animationRef.current) {
-          cancelAnimationFrame(animationRef.current);
-        }
-        if (timerIntervalRef.current) {
-          clearInterval(timerIntervalRef.current);
-        }
-
-        // Check if correct
-        const correct = response === direction;
-
-        onResponse({
-          response,
-          rt: Math.round(rt),
-          correct,
-          timeout: false
-        });
+        handleResponse(response);
       }
     };
 
@@ -312,6 +335,43 @@ const RandomDotMotion = ({
 
       <div className="response-keys">
         Press <strong>F</strong> or <strong>←</strong> for LEFT | Press <strong>J</strong> or <strong>→</strong> for RIGHT
+      </div>
+
+      {/* Clickable buttons for mobile support */}
+      <div className="response-buttons" style={{
+        display: 'flex',
+        gap: '2rem',
+        marginTop: '2rem',
+        justifyContent: 'center'
+      }}>
+        <button
+          className="btn btn-primary"
+          onClick={() => handleResponse('left')}
+          disabled={showFixation}
+          style={{
+            fontSize: '1.5rem',
+            padding: '1rem 3rem',
+            backgroundColor: '#3498db',
+            opacity: showFixation ? 0.5 : 1,
+            cursor: showFixation ? 'not-allowed' : 'pointer'
+          }}
+        >
+          ← LEFT
+        </button>
+        <button
+          className="btn btn-primary"
+          onClick={() => handleResponse('right')}
+          disabled={showFixation}
+          style={{
+            fontSize: '1.5rem',
+            padding: '1rem 3rem',
+            backgroundColor: '#3498db',
+            opacity: showFixation ? 0.5 : 1,
+            cursor: showFixation ? 'not-allowed' : 'pointer'
+          }}
+        >
+          RIGHT →
+        </button>
       </div>
     </div>
   );

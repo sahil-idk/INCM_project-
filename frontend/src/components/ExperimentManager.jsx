@@ -66,7 +66,9 @@ const ExperimentManager = () => {
   };
 
   const handleStartPractice = () => {
+    console.log('[ExpManager] Starting practice trials');
     const practiceTrials = generatePracticeTrials(10);
+    console.log('[ExpManager] Generated practice trials:', practiceTrials.length);
     setTrials(practiceTrials);
     setCurrentTrialIndex(0);
     setCurrentTrial(practiceTrials[0]);
@@ -74,6 +76,7 @@ const ExperimentManager = () => {
 
     // Enable page unload prevention
     preventPageUnload(true);
+    console.log('[ExpManager] Practice stage initialized, first trial set');
   };
 
   const handleStartBaseline = () => {
@@ -93,19 +96,27 @@ const ExperimentManager = () => {
   };
 
   const handleTrialResponse = async (responseData) => {
+    console.log(`[ExpManager] Trial ${currentTrialIndex + 1}/${trials.length} - Response received:`, responseData);
+
     // Save trial data
     const trialData = {
       ...currentTrial,
       ...responseData
     };
 
+    console.log(`[ExpManager] Complete trial data:`, trialData);
+
     // Only save non-practice trials to database
     if (stage !== 'practice') {
+      console.log(`[ExpManager] Saving trial to dataManager (stage: ${stage})`);
       dataManager.addTrial(trialData);
+    } else {
+      console.log(`[ExpManager] Skipping save (practice trial)`);
     }
 
     // Show feedback if practice trial
     if (currentTrial.showFeedback) {
+      console.log(`[ExpManager] Showing feedback for practice trial`);
       if (responseData.timeout) {
         setFeedbackType('timeout');
         setFeedbackMessage('Too slow!');
@@ -121,12 +132,14 @@ const ExperimentManager = () => {
 
       // Hide feedback after 1 second
       setTimeout(() => {
+        console.log(`[ExpManager] Hiding feedback, proceeding to next trial`);
         setShowFeedback(false);
         proceedToNextTrial();
       }, 1000);
     } else {
       // Show timeout message for time pressure condition
       if (responseData.timeout && stage === 'timePressure') {
+        console.log(`[ExpManager] Showing timeout message for time pressure trial`);
         setFeedbackType('timeout');
         setFeedbackMessage('Too slow! Please respond faster');
         setShowFeedback(true);
@@ -137,6 +150,7 @@ const ExperimentManager = () => {
         }, 500);
       } else {
         // Small delay before next trial
+        console.log(`[ExpManager] Proceeding to next trial after 300ms delay`);
         setTimeout(() => {
           proceedToNextTrial();
         }, 300);
@@ -146,21 +160,28 @@ const ExperimentManager = () => {
 
   const proceedToNextTrial = () => {
     const nextIndex = currentTrialIndex + 1;
+    console.log(`[ExpManager] proceedToNextTrial - Current: ${currentTrialIndex}, Next: ${nextIndex}, Total: ${trials.length}`);
 
     if (nextIndex < trials.length) {
       // More trials in current condition
+      console.log(`[ExpManager] Moving to trial ${nextIndex + 1}/${trials.length}`);
       setCurrentTrialIndex(nextIndex);
       setCurrentTrial(trials[nextIndex]);
+      console.log(`[ExpManager] Next trial set:`, trials[nextIndex]);
     } else {
       // Finished current condition
+      console.log(`[ExpManager] Condition complete! Stage: ${stage}`);
       if (stage === 'practice') {
+        console.log('[ExpManager] Practice complete, starting baseline');
         setStage('baseline');
         handleStartBaseline();
       } else if (stage === 'baseline') {
+        console.log('[ExpManager] Baseline complete, submitting trials and showing break');
         // Submit buffered trials before break
         dataManager.submitBufferedTrials();
         setStage('break');
       } else if (stage === 'timePressure') {
+        console.log('[ExpManager] Time pressure complete, submitting all trials');
         // Submit all remaining trials
         dataManager.submitAllTrials();
         setStage('postSurvey');
