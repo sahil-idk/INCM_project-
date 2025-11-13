@@ -144,7 +144,7 @@ const RandomDotMotion = ({
       }
       console.log(`[RDM] Trial ${trialNumber} - Cleanup complete`);
     };
-  }, [coherence, direction, timeLimit]);
+  }, [trialNumber, coherence, direction, timeLimit]); // Added trialNumber to dependencies
 
   // Countdown timer
   const startCountdownTimer = () => {
@@ -222,7 +222,7 @@ const RandomDotMotion = ({
   };
 
   // Handle response (keyboard or button click)
-  const handleResponse = (response) => {
+  const handleResponse = React.useCallback((response) => {
     if (hasRespondedRef.current || showFixation) return;
 
     hasRespondedRef.current = true;
@@ -250,7 +250,7 @@ const RandomDotMotion = ({
 
     console.log(`[RDM] Trial ${trialNumber} - Calling onResponse with:`, responseData);
     onResponse(responseData);
-  };
+  }, [trialNumber, direction, showFixation, onResponse]);
 
   // Handle keyboard response
   useEffect(() => {
@@ -272,7 +272,7 @@ const RandomDotMotion = ({
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [direction, onResponse, showFixation]);
+  }, [handleResponse]); // handleResponse already includes all dependencies
 
   // Draw fixation cross
   const drawFixation = () => {
