@@ -70,7 +70,7 @@ Should see: `{"success": true, "status": "ok", "dbConnected": true}`
 
 ## 🎨 STEP 3: Deploy Frontend (Vercel) - FREE
 
-1. Go to https://vercel.com
+1. Go to https://vercel.c  om
 2. Sign up with GitHub
 3. Click "Add New..." → "Project"
 4. Import your repository
